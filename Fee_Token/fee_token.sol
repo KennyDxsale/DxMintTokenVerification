@@ -971,6 +971,7 @@ contract DevFeeLiquidityGeneratorToken is Context, IERC20, Ownable {
     uint256 private _previousDevFee = _devFee;
 
     uint256 public _sellTaxFee;
+    uint256 private _previousSellFee;
 
     IUniswapV2Router02 public immutable uniswapV2Router;
     address public immutable uniswapV2Pair;
@@ -1016,7 +1017,8 @@ contract DevFeeLiquidityGeneratorToken is Context, IERC20, Ownable {
         _previousLiquidityFee = _liquidityFee;
         _devFee = setFees[2];
         _previousDevFee = _devFee;
-        _sellTaxFee = setFees[3];        
+        _sellTaxFee = setFees[3];  
+        _previousSellFee = _sellTaxFee;      
         _devWalletAddress = devWalletAddress_;
 
         _maxTxAmount = amountOfTokenWei;
@@ -1278,16 +1280,19 @@ contract DevFeeLiquidityGeneratorToken is Context, IERC20, Ownable {
         _previousTaxFee = _taxFee;
         _previousLiquidityFee = _liquidityFee;
         _previousDevFee = _devFee;
+        _previousSellFee = _sellTaxFee;
         
         _taxFee = 0;
         _liquidityFee = 0;
         _devFee = 0;
+        _sellTaxFee = 0;
     }
     
     function restoreAllFee() private {
         _taxFee = _previousTaxFee;
         _liquidityFee = _previousLiquidityFee;
         _devFee = _previousDevFee;
+        _sellTaxFee = _previousSellFee;
     }
     
     function isExcludedFromFee(address account) public view returns(bool) {
