@@ -614,7 +614,6 @@ abstract contract Ownable is Context {
     }
 }
 
-// pragma solidity >=0.5.0;
 
 interface UniSwapFactory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
@@ -636,8 +635,6 @@ interface UniSwapFactory {
     function setFeeToSetter(address) external;
 }
 
-
-// pragma solidity >=0.5.0;
 
 interface IIUniSwapPair {
     event Approval(address indexed owner, address indexed spender, uint value);
@@ -710,7 +707,6 @@ interface IIUniSwapPair {
     function initialize(address, address) external;
 }
 
-// pragma solidity >=0.6.2;
 
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
@@ -856,9 +852,6 @@ interface IUniswapV2Router01 {
 }
 
 
-
-// pragma solidity >=0.6.2;
-
 interface IUniswapV2Router02 is IUniswapV2Router01 {
     function removeLiquidityETHSupportingFeeOnTransferTokens(
         address token,
@@ -928,7 +921,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 
 }
 
-contract DevFeeLiquidityGeneratorToken is Context, IERC20, Ownable {
+contract DxFeeToken is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
     address private dead = 0x000000000000000000000000000000000000dEaD;
@@ -940,6 +933,7 @@ contract DevFeeLiquidityGeneratorToken is Context, IERC20, Ownable {
     uint256 public prevLiqFee;
     uint256 public prevTaxFee;
     uint256 public prevDevFee;
+    uint256 public prevSellFee;
     
     mapping (address => uint256) private _rOwned;
     mapping (address => uint256) private _tOwned;
@@ -1592,10 +1586,12 @@ contract DevFeeLiquidityGeneratorToken is Context, IERC20, Ownable {
         prevLiqFee = _liquidityFee;
         prevTaxFee = _taxFee;
         prevDevFee = _devFee;
+        prevSellFee = _sellTaxFee;
         _maxTxAmount = _tTotal;
         _liquidityFee = 0;
         _taxFee = 0;
         _devFee = 0;
+        _sellTaxFee = 0;
         swapAndLiquifyEnabled = false;
         
     }
@@ -1606,6 +1602,7 @@ contract DevFeeLiquidityGeneratorToken is Context, IERC20, Ownable {
         _liquidityFee = prevLiqFee;
         _taxFee = prevTaxFee;
         _devFee = prevDevFee;
+        _sellTaxFee = prevSellFee;
         swapAndLiquifyEnabled = true;
         
     }

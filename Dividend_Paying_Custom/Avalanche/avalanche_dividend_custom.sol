@@ -201,9 +201,9 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
 
-    function WETH() external pure returns (address);
+    function WAVAX() external pure returns (address);
 
-    function addLiquidityETH(
+    function addLiquidityAVAX(
         address token,
         uint amountTokenDesired,
         uint amountTokenMin,
@@ -224,14 +224,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
         uint deadline
     ) external;
 
-    function swapExactETHForTokensSupportingFeeOnTransferTokens(
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external payable;
-
-    function swapExactTokensForETHSupportingFeeOnTransferTokens(
+    function swapExactTokensForAVAXSupportingFeeOnTransferTokens(
         uint amountIn,
         uint amountOutMin,
         address[] calldata path,
@@ -494,13 +487,14 @@ contract DividendPayingToken is ERC20, IDividendPayingToken, IDividendPayingToke
     }
 }
 
-contract DividendGeneratorToken is ERC20, Ownable {
+contract DxCustomDividendToken is ERC20, Ownable {
 
     IUniswapV2Router02 public immutable uniswapV2Router;
     address public immutable uniswapV2Pair;
 
     address public rewardToken;
     uint8 public decimalNew;
+    address public router;
     address public basePair;
 
     bool public mintedByDxsale = true;
@@ -567,8 +561,9 @@ contract DividendGeneratorToken is ERC20, Ownable {
 
         dividendTracker = new DividendTracker(rewardToken, minimumTokenBalanceForDividends, decimalNew);
 
+        router = _router;
         basePair = _basePair;  
-        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(_router);
+        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(router);
 
         address _uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), basePair);
@@ -583,7 +578,8 @@ contract DividendGeneratorToken is ERC20, Ownable {
         dividendTracker.excludeFromDividends(dead);
         dividendTracker.excludeFromDividends(address(_uniswapV2Router));
 
-        //excludeFromFees(address(this), true);
+        //excludeFromFees
+        _isExcludedFromFees[owner()] = true;
         _isExcludedFromFees[address(this)] = true;
 
         _mint(tx.origin, _totalSupply);
@@ -754,7 +750,7 @@ contract DividendGeneratorToken is ERC20, Ownable {
         path[0] = address(this);
         path[1] = getWrapAddr();
         _approve(address(this), address(uniswapV2Router), tokenAmount);
-        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+        uniswapV2Router.swapExactTokensForAVAXSupportingFeeOnTransferTokens(
             tokenAmount,
             0,
             path,
@@ -784,7 +780,7 @@ contract DividendGeneratorToken is ERC20, Ownable {
 
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
         _approve(address(this), address(uniswapV2Router), tokenAmount);
-        uniswapV2Router.addLiquidityETH{value : ethAmount}(
+        uniswapV2Router.addLiquidityAVAX{value : ethAmount}(
             address(this),
             tokenAmount,
             0, // slippage is unavoidable
@@ -794,18 +790,17 @@ contract DividendGeneratorToken is ERC20, Ownable {
         );
 
     }
-    
-    function swapAndSendDividends(uint256 tokens) private{
-        uint256 initialBalance = address(this).balance;
-        swapTokensForEth(tokens);
-        uint256 dividends = address(this).balance - (initialBalance);
-        (bool success,) = address(dividendTracker).call{value: dividends}("");
- 
-        if(success) {
-   	 		emit SendDividends(tokens, dividends);
+
+    function swapAndSendDividends(uint256 tokens) private {
+        swapTokensForReward(tokens, address(this));
+        uint256 dividends = IERC20(rewardToken).balanceOf(address(this));
+        bool success = IERC20(rewardToken).transfer(address(dividendTracker), dividends);
+
+        if (success) {
+            dividendTracker.distributeRewardDividends(dividends);
+            emit SendDividends(tokens, dividends);
         }
     }
-    
 
 }
 

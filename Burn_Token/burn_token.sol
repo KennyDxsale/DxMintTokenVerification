@@ -615,7 +615,7 @@ abstract contract Ownable is Context {
 }
 
 
-contract BurnFeeToken is Context, IERC20, Ownable {
+contract DxBurnToken is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
     address private dead = 0x000000000000000000000000000000000000dEaD;

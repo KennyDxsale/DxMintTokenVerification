@@ -369,7 +369,7 @@ contract Ownable is Context {
 
 
 
-contract standardToken is Context, IERC20, IERC20Metadata,Ownable {
+contract DxStandardToken is Context, IERC20, IERC20Metadata,Ownable {
     mapping (address => uint256) private _balances;
 
     mapping (address => mapping (address => uint256)) private _allowances;
