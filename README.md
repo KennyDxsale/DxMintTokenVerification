@@ -6,7 +6,7 @@ The following document will share details on how to verify code for your generat
 1. Start by first navigating to the verification section of BSCScan (https://bscscan.com/verifyContract) (Or for your chain)
 2. Enter your DxMint generated token address 
 3. For Compiler Type select "Solidity (Single File)"
-4. For Compiler Version select "v0.6.12+commit.27d51765"
+4. For Compiler Version select "v0.8.7+commit.e28d00a7"
 5. For Open Source License Type select "3) MIT License (MIT)"
 6. Click continue
 7. Now in the optimization field on the right select "Yes"
@@ -22,3 +22,7 @@ The following document will share details on how to verify code for your generat
 12. In the section that says "Constructor Arguments ABI-Encoded" copy paste the variables copied from step 10 above
 13. Verify the Captcha and click the Verify and Publish button.
 14. Your code should now be verified.
+
+#### DxDividend Token Verification
+1. Make sure the IterableMapping library is verified first. Check if the contract address in the IterableMapping_addresses.txt file is verified on the chain-specific blockexplorer. If not, verify using the steps mentioned above. Copy the contract code from the IterableMapping.txt file where required, select the optimization field to "Yes" like before. There will be no Bytecode error as there are no contract arguements to take care of.
+2. To verify the token, same exact steps required for other token verification except for an additional step. In the Contract Library Address section, before you verify and publish, add the Library_1 Name "IterableMapping" and for the chain-specific address for Library_1 Contract Address get from the IterableMapping_addresses.txt file depending on the type of dividend token you are trying to verify (Custom vs Native).
