@@ -837,8 +837,6 @@ contract DxBurnToken is Context, IERC20, Ownable {
         require(burnFee >= 0 && burnFee <=maxBurnFee,"teamFee out of range");
         _burnFee = burnFee;
     }  
-
-
    
     function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {
         require(maxTxPercent >= minMxTxPercentage && maxTxPercent <=100,"maxTxPercent out of range");
@@ -860,7 +858,7 @@ contract DxBurnToken is Context, IERC20, Ownable {
         uint256 tFee = calculateTaxFee(tAmount);
         uint256 tDev = calculateDevFee(tAmount);
         uint256 tBurn = calculateBurnFee(tAmount);
-        uint256 tTransferAmount = tAmount.sub(tDev).sub(tBurn);
+        uint256 tTransferAmount = tAmount.sub(tFee).sub(tDev).sub(tBurn);
         return (tTransferAmount, tFee, tDev, tBurn);
     }
 
@@ -869,7 +867,7 @@ contract DxBurnToken is Context, IERC20, Ownable {
         uint256 rFee = tFee.mul(currentRate);
         uint256 rDev = tDev.mul(currentRate);
         uint256 rBurn = tBurn.mul(currentRate);
-        uint256 rTransferAmount = rAmount.sub(rDev).sub(rBurn);
+        uint256 rTransferAmount = rAmount.sub(rFee).sub(rDev).sub(rBurn);
         return (rAmount, rTransferAmount, rFee);
     }
 
@@ -1007,9 +1005,8 @@ contract DxBurnToken is Context, IERC20, Ownable {
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
 
         _takeDev(tDev);
-        uint256 rBurn = tBurn.mul(_getRate());
-        uint256 rDev = tDev.mul(_getRate());            
-        _reflectFee(rFee, rDev, rBurn, tFee, tDev, tBurn);
+        uint256 rBurn = tBurn.mul(_getRate());         
+        _reflectFee(rFee, rBurn, tFee, tDev, tBurn);
         _burn(sender, tBurn);
         emit Transfer(sender, recipient, tTransferAmount);
     }
@@ -1021,9 +1018,8 @@ contract DxBurnToken is Context, IERC20, Ownable {
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);           
        
         _takeDev(tDev);
-        uint256 rBurn = tBurn.mul(_getRate());
-        uint256 rDev = tDev.mul(_getRate());            
-        _reflectFee(rFee, rDev, rBurn, tFee, tDev, tBurn);
+        uint256 rBurn = tBurn.mul(_getRate());           
+        _reflectFee(rFee, rBurn, tFee, tDev, tBurn);
         _burn(sender, tBurn);
         emit Transfer(sender, recipient, tTransferAmount);
     }
@@ -1035,9 +1031,8 @@ contract DxBurnToken is Context, IERC20, Ownable {
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);   
         
         _takeDev(tDev);
-        uint256 rBurn = tBurn.mul(_getRate());
-        uint256 rDev = tDev.mul(_getRate());            
-        _reflectFee(rFee, rDev, rBurn, tFee, tDev, tBurn);
+        uint256 rBurn = tBurn.mul(_getRate());         
+        _reflectFee(rFee, rBurn, tFee, tDev, tBurn);
         _burn(sender, tBurn);
         emit Transfer(sender, recipient, tTransferAmount);
     }
@@ -1050,16 +1045,15 @@ contract DxBurnToken is Context, IERC20, Ownable {
         _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);        
         
         _takeDev(tDev);    
-        uint256 rBurn = tBurn.mul(_getRate());
-        uint256 rDev = tDev.mul(_getRate());            
-        _reflectFee(rFee, rDev, rBurn, tFee, tDev, tBurn);
+        uint256 rBurn = tBurn.mul(_getRate());           
+        _reflectFee(rFee, rBurn, tFee, tDev, tBurn);
         _burn(sender, tBurn);
         emit Transfer(sender, recipient, tTransferAmount);
     }
 
 
-    function _reflectFee(uint256 rFee, uint256 rDev, uint256 rBurn, uint256 tFee, uint256 tDev, uint256 tBurn) private {
-        _rTotal = _rTotal.sub(rFee).sub(rDev).sub(rBurn);
+    function _reflectFee(uint256 rFee, uint256 rBurn, uint256 tFee, uint256 tDev, uint256 tBurn) private {
+        _rTotal = _rTotal.sub(rFee).sub(rBurn);
         _tFeeTotal = _tFeeTotal.add(tFee);
         _tDevTotal = _tDevTotal.add(tDev);
         _tBurnTotal = _tBurnTotal.add(tBurn);
