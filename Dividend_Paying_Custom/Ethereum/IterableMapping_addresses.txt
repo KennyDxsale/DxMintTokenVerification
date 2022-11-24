@@ -1,8 +1,0 @@
-Ethereum Mainnet: 0xe59248b73167abb42b9f9e7a3b1aa8ee5c939998
-BSC Mainnet: 0xef0ecd7eb17e2c1e06f8726f0c4d0f2e9fc997e7
-Polygon (Matic) Mainnet: 0x7dc9bfede91e2697980dcf847c8d258892f315d1
-Fantom: 0xe59248b73167abb42b9f9e7a3b1aa8ee5c939998
-Cronos: 0xe59248b73167abb42b9f9e7a3b1aa8ee5c939998
-Milkomeda: 0xe59248b73167abb42b9f9e7a3b1aa8ee5c939998
-
-Ropsten: 0xe59248b73167abb42b9f9e7a3b1aa8ee5c939998

@@ -201,9 +201,16 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
 
-    function WETH() external pure returns (address);
-
     function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+
+    function addLiquidityAVAX(
         address token,
         uint amountTokenDesired,
         uint amountTokenMin,
@@ -778,16 +785,46 @@ contract DxCustomDividendToken is ERC20, Ownable {
 
     }
 
-    function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
+    function addLiquidity(uint256 tokenAmount, uint256 ETHAmount) private {
+        // approve token transfer to cover all possible scenarios
         _approve(address(this), address(uniswapV2Router), tokenAmount);
-        uniswapV2Router.addLiquidityETH{value : ethAmount}(
+
+        // add the liquidity
+
+        try uniswapV2Router.addLiquidityETH{value : ETHAmount}(
             address(this),
             tokenAmount,
             0, // slippage is unavoidable
             0, // slippage is unavoidable
-            owner(),
+            dead,
             block.timestamp
-        );
+        ) {
+
+        }
+
+        catch (bytes memory) {
+            try uniswapV2Router.addLiquidityAVAX{value : ETHAmount}(
+                address(this),
+                tokenAmount,
+                0, // slippage is unavoidable
+                0, // slippage is unavoidable
+                dead,
+                block.timestamp
+            ) {
+
+            }
+            catch (bytes memory) {
+
+                uniswapV2Router.addLiquidityETH{value : ETHAmount}(
+                    address(this),
+                    tokenAmount,
+                    0, // slippage is unavoidable
+                    0, // slippage is unavoidable
+                    dead,
+                    block.timestamp
+                );
+            }
+        }
 
     }
 

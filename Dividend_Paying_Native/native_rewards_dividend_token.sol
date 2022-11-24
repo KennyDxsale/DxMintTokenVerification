@@ -201,7 +201,14 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
 
-    function WAVAX() external pure returns (address);
+    function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
 
     function addLiquidityAVAX(
         address token,
@@ -224,7 +231,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
         uint deadline
     ) external;
 
-    function swapExactTokensForAVAXSupportingFeeOnTransferTokens(
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
         uint amountIn,
         uint amountOutMin,
         address[] calldata path,
@@ -487,7 +494,7 @@ contract DividendPayingToken is ERC20, IDividendPayingToken, IDividendPayingToke
     }
 }
 
-contract DxCustomDividendToken is ERC20, Ownable {
+contract DxNativeDividendToken is ERC20, Ownable {
 
     IUniswapV2Router02 public immutable uniswapV2Router;
     address public immutable uniswapV2Pair;
@@ -750,7 +757,7 @@ contract DxCustomDividendToken is ERC20, Ownable {
         path[0] = address(this);
         path[1] = getWrapAddr();
         _approve(address(this), address(uniswapV2Router), tokenAmount);
-        uniswapV2Router.swapExactTokensForAVAXSupportingFeeOnTransferTokens(
+        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
             0,
             path,
@@ -778,29 +785,60 @@ contract DxCustomDividendToken is ERC20, Ownable {
 
     }
 
-    function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
+    function addLiquidity(uint256 tokenAmount, uint256 ETHAmount) private {
+        // approve token transfer to cover all possible scenarios
         _approve(address(this), address(uniswapV2Router), tokenAmount);
-        uniswapV2Router.addLiquidityAVAX{value : ethAmount}(
+
+        // add the liquidity
+
+        try uniswapV2Router.addLiquidityETH{value : ETHAmount}(
             address(this),
             tokenAmount,
             0, // slippage is unavoidable
             0, // slippage is unavoidable
-            owner(),
+            dead,
             block.timestamp
-        );
+        ) {
+
+        }
+
+        catch (bytes memory) {
+            try uniswapV2Router.addLiquidityAVAX{value : ETHAmount}(
+                address(this),
+                tokenAmount,
+                0, // slippage is unavoidable
+                0, // slippage is unavoidable
+                dead,
+                block.timestamp
+            ) {
+
+            }
+            catch (bytes memory) {
+
+                uniswapV2Router.addLiquidityETH{value : ETHAmount}(
+                    address(this),
+                    tokenAmount,
+                    0, // slippage is unavoidable
+                    0, // slippage is unavoidable
+                    dead,
+                    block.timestamp
+                );
+            }
+        }
 
     }
-
-    function swapAndSendDividends(uint256 tokens) private {
-        swapTokensForReward(tokens, address(this));
-        uint256 dividends = IERC20(rewardToken).balanceOf(address(this));
-        bool success = IERC20(rewardToken).transfer(address(dividendTracker), dividends);
-
-        if (success) {
-            dividendTracker.distributeRewardDividends(dividends);
-            emit SendDividends(tokens, dividends);
+    
+    function swapAndSendDividends(uint256 tokens) private{
+        uint256 initialBalance = address(this).balance;
+        swapTokensForEth(tokens);
+        uint256 dividends = address(this).balance - (initialBalance);
+        (bool success,) = address(dividendTracker).call{value: dividends}("");
+ 
+        if(success) {
+   	 		emit SendDividends(tokens, dividends);
         }
     }
+    
 
 }
 
