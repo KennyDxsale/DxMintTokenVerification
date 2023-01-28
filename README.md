@@ -30,9 +30,9 @@ The following document will share details on how to verify code for your generat
 
 Note:
 For Standard, Burn and Fee tokens:
-    Compiler Version: v0.8.14
+    Compiler Version: v0.8.7
     Optimization -> yes
-    Runs -> 5
+    Runs -> 200
 
 For Dividend tokens:
     Compiler Version: v0.8.7
