@@ -1142,21 +1142,25 @@ contract DxFeeToken is Context, IERC20, Ownable {
     function setTaxFeePercent(uint256 taxFee) external onlyOwner() {
          require(taxFee >= 0 && taxFee <=maxTaxFee,"taxFee out of range");
         _taxFee = taxFee;
+        _previousTaxFee = _taxFee;
     }
     
     function setLiquidityFeePercent(uint256 liquidityFee) external onlyOwner() {
          require(liquidityFee >= 0 && liquidityFee <=maxLiqFee,"liquidityFee out of range");
         _liquidityFee = liquidityFee;
+        _previousLiquidityFee = _liquidityFee;
     }
     
     function setDevFeePercent(uint256 devFee) external onlyOwner() {
         require(devFee >= 0 && devFee <=maxDevFee,"teamFee out of range");
         _devFee = devFee;
+        _previousDevFee = _devFee;
     }      
 
     function setSellTaxFeePercent(uint256 sellTaxFee) external onlyOwner() {
          require(sellTaxFee >= 0 && sellTaxFee <=maxSellTaxFee,"taxFee out of range");
         _sellTaxFee = sellTaxFee;
+        _previousSellFee = _sellTaxFee;
     }
    
     function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {

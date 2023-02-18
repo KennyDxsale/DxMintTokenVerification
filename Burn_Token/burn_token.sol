@@ -825,17 +825,19 @@ contract DxBurnToken is Context, IERC20, Ownable {
     function setTaxFeePercent(uint256 taxFee) external onlyOwner() {
          require(taxFee >= 0 && taxFee <=maxTaxFee,"taxFee out of range");
         _taxFee = taxFee;
+        _previousTaxFee = _taxFee;
     }
-    
     
     function setDevFeePercent(uint256 devFee) external onlyOwner() {
         require(devFee >= 0 && devFee <=maxDevFee,"teamFee out of range");
         _devFee = devFee;
+        _previousDevFee = _devFee;
     }      
 
     function setBurnFeePercent(uint256 burnFee) external onlyOwner() {
         require(burnFee >= 0 && burnFee <=maxBurnFee,"teamFee out of range");
         _burnFee = burnFee;
+        _previousBurnFee = _burnFee;
     }  
    
     function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {
