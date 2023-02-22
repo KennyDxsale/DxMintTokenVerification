@@ -1,3 +1,11 @@
+/*
+// Official DxFee Token
+// To Mint your own token visit https://dx.app
+// DxMint verified tokens are unruggable through code
+// To view the audit certificate for this token search it in https://dx.app/dxmint
+// Please ensure one wallet doesn't hold too much supply of tokens!
+*/
+
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.7;
