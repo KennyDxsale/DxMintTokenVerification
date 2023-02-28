@@ -7,7 +7,7 @@
 */
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.14;
 
 interface IERC20 {
 
@@ -246,6 +246,14 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
         address to,
         uint deadline
     ) external;
+
+    function swapExactTokensForAVAXSupportingFeeOnTransferTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external;
     
 }
 
@@ -373,44 +381,20 @@ interface IDividendPayingToken {
     );
 }
 
-library SafeMathInt {
-
-    function toUint256Safe(int256 a) internal pure returns (uint256) {
-        require(a >= 0);
-        return uint256(a);
-    }
-}
-
-library SafeMathUint {
-    function toInt256Safe(uint256 a) internal pure returns (int256) {
-        int256 b = int256(a);
-        require(b >= 0);
-        return b;
-    }
-}
-
 contract DividendPayingToken is ERC20, IDividendPayingToken, IDividendPayingTokenOptional {
-    using SafeMathUint for uint256;
-    using SafeMathInt for int256;
     uint256 constant internal magnitude = 2 ** 128;
     uint256 internal magnifiedDividendPerShare;
     uint256 internal lastAmount;
     address public immutable rewardToken;
-    uint8 public decimalUpdate;
     mapping(address => int256) internal magnifiedDividendCorrections;
     mapping(address => uint256) internal withdrawnDividends;
     uint256 public totalDividendsDistributed;
 
-    constructor(address _rewardToken, string memory _name, string memory _symbol, uint8 _decimals) ERC20(_name, _symbol) {
-        decimalUpdate = _decimals;
+    constructor(address _rewardToken, string memory _name, string memory _symbol) ERC20(_name, _symbol) {
         rewardToken = _rewardToken;
     }
 
     receive() external payable {
-    }
-
-    function decimals() public view virtual override returns (uint8) {
-        return decimalUpdate;
     }
 
     function distributeDividends() public override payable {
@@ -467,13 +451,13 @@ contract DividendPayingToken is ERC20, IDividendPayingToken, IDividendPayingToke
     }
 
     function accumulativeDividendOf(address _owner) public view override returns (uint256) {
-        return magnifiedDividendPerShare * ((balanceOf(_owner) + magnifiedDividendCorrections[_owner].toUint256Safe()) / magnitude);
+        return magnifiedDividendPerShare * ((balanceOf(_owner) + uint256(magnifiedDividendCorrections[_owner])) / magnitude);
     }
 
     function _transfer(address from, address to, uint256 value) internal virtual override {
         require(false);
 
-        int256 _magCorrection = (magnifiedDividendPerShare * value).toInt256Safe();
+        int256 _magCorrection = int256(magnifiedDividendPerShare * value);
         magnifiedDividendCorrections[from] = magnifiedDividendCorrections[from] + _magCorrection;
         magnifiedDividendCorrections[to] = magnifiedDividendCorrections[to] - _magCorrection;
     }
@@ -481,13 +465,13 @@ contract DividendPayingToken is ERC20, IDividendPayingToken, IDividendPayingToke
     function _mint(address account, uint256 value) internal override {
         super._mint(account, value);
 
-        magnifiedDividendCorrections[account] = magnifiedDividendCorrections[account] - (magnifiedDividendPerShare * value).toInt256Safe();
+        magnifiedDividendCorrections[account] = magnifiedDividendCorrections[account] - int256(magnifiedDividendPerShare * value);
     }
 
     function _burn(address account, uint256 value) internal override {
         super._burn(account, value);
 
-        magnifiedDividendCorrections[account] = magnifiedDividendCorrections[account] + (magnifiedDividendPerShare * value).toInt256Safe();
+        magnifiedDividendCorrections[account] = magnifiedDividendCorrections[account] + int256(magnifiedDividendPerShare * value);
     }
 
     function _setBalance(address account, uint256 newBalance) internal {
@@ -508,13 +492,13 @@ contract DxCustomDividendToken is ERC20, Ownable {
     address public immutable uniswapV2Pair;
 
     address public rewardToken;
-    uint8 public decimalNew;
     address public router;
     address public basePair;
 
     bool public mintedByDxsale = true;
     address dead = 0x000000000000000000000000000000000000dEaD;
 
+    uint8 private _decimals;
     bool private swapping;
 
     DividendTracker public dividendTracker;
@@ -531,8 +515,6 @@ contract DxCustomDividendToken is ERC20, Ownable {
     address public presaleAddress;
 
     mapping(address => bool) public _isExcludedFromFees;
-
-    event SetAutomatedMarketMakerPair(address indexed pair, bool indexed value);
 
     event GasForProcessingUpdated(uint256 indexed newValue, uint256 indexed oldValue);
 
@@ -551,7 +533,7 @@ contract DxCustomDividendToken is ERC20, Ownable {
     );
 
     function setLiquidityFee(uint256 _newFee) external onlyOwner {
-        require(_newFee >= 0 && _newFee <= 10, "Fee out of range!");
+        require(_newFee >= 0 && _newFee <= 15, "Fee out of range!");
         liquidityFee = _newFee;
         totalFees = _newFee + tokenRewardsFee;
     }
@@ -566,15 +548,15 @@ contract DxCustomDividendToken is ERC20, Ownable {
 
         tokenRewardsFee = _tokenRewardsFee;
         liquidityFee = _liquidityFee;
-        totalFees = _tokenRewardsFee + _liquidityFee;
+        totalFees = tokenRewardsFee + liquidityFee;
 
         rewardToken = _rewardToken;
-        decimalNew = decimals_;
+        _decimals = decimals_;
 
         swapTokensAtAmount = _totalSupply /10000;
         minimumTokenBalanceForDividends = _totalSupply /100000;
 
-        dividendTracker = new DividendTracker(rewardToken, minimumTokenBalanceForDividends, decimalNew);
+        dividendTracker = new DividendTracker(rewardToken, minimumTokenBalanceForDividends);
 
         router = _router;
         basePair = _basePair;  
@@ -590,6 +572,7 @@ contract DxCustomDividendToken is ERC20, Ownable {
         dividendTracker.excludeFromDividends(address(dividendTracker));
         dividendTracker.excludeFromDividends(_uniswapV2Pair);
         dividendTracker.excludeFromDividends(address(this));
+        dividendTracker.excludeFromDividends(owner());
         dividendTracker.excludeFromDividends(dead);
         dividendTracker.excludeFromDividends(address(_uniswapV2Router));
 
@@ -605,14 +588,13 @@ contract DxCustomDividendToken is ERC20, Ownable {
 
     }
 
-    function getWrapAddr() public view returns (address){
-
-        return basePair;
-
+    function decimals() public view virtual override returns (uint8) {
+        return _decimals;
     }
 
-    function decimals() public view virtual override returns (uint8) {
-        return decimalNew;
+    function setSwapTokensAtAmount(uint256 amount) external onlyOwner {
+        require(amount > totalSupply() / 1000000, "Amount too low");
+        swapTokensAtAmount = amount;
     }
 
     function excludeFromFees(address account) public onlyOwner {
@@ -637,12 +619,17 @@ contract DxCustomDividendToken is ERC20, Ownable {
         return dividendTracker.claimWait();
     }
 
+    function updateMinimumTokenBalanceForDividends(uint256 amount) external onlyOwner{
+        minimumTokenBalanceForDividends = amount;
+        dividendTracker.updateMinimumTokenBalanceForDividends(amount);
+    }
+
     function getTotalDividendsDistributed() external view returns (uint256) {
         return dividendTracker.totalDividendsDistributed();
     }
 
-    function isExcludedFromFees(address account) public view returns (bool) {
-        return _isExcludedFromFees[account];
+    function isExcludedFromDividends(address account) public view returns (bool){
+        return dividendTracker.excludedFromDividends(account);
     }
 
     function withdrawableDividendOf(address account) public view returns (uint256) {
@@ -763,22 +750,47 @@ contract DxCustomDividendToken is ERC20, Ownable {
     function swapTokensForEth(uint256 tokenAmount) private {
         address[] memory path = new address[](2);
         path[0] = address(this);
-        path[1] = getWrapAddr();
+        path[1] = basePair;
         _approve(address(this), address(uniswapV2Router), tokenAmount);
-        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+
+        try uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
             0,
             path,
             address(this),
             block.timestamp
-        );
-    }
+        ) {
 
+        }
+
+        catch (bytes memory) {
+            try uniswapV2Router.swapExactTokensForAVAXSupportingFeeOnTransferTokens(
+                tokenAmount,
+                0,
+                path,
+                address(this),
+                block.timestamp
+            ) {
+
+            }
+            catch (bytes memory) {
+
+                uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                    tokenAmount,
+                    0,
+                    path,
+                    address(this),
+                    block.timestamp
+                );
+            }
+        }
+
+    }
 
     function swapTokensForReward(uint256 tokenAmount, address recipient) private {
         address[] memory path = new address[](3);
         path[0] = address(this);
-        path[1] = getWrapAddr();
+        path[1] = basePair;
         path[2] = rewardToken;
 
         _approve(address(this), address(uniswapV2Router), tokenAmount);
@@ -850,7 +862,6 @@ contract DxCustomDividendToken is ERC20, Ownable {
 }
 
 contract DividendTracker is DividendPayingToken, Ownable {
-    using SafeMathInt for int256;
     using IterableMapping for IterableMapping.Map;
 
     IterableMapping.Map private tokenHoldersMap;
@@ -861,15 +872,14 @@ contract DividendTracker is DividendPayingToken, Ownable {
     mapping(address => uint256) public lastClaimTimes;
 
     uint256 public claimWait;
-    uint256 public immutable minimumTokenBalanceForDividends;
+    uint256 public minimumTokenBalanceForDividends;
 
     event ExcludeFromDividends(address indexed account);
     event ClaimWaitUpdated(uint256 indexed newValue, uint256 indexed oldValue);
 
     event Claim(address indexed account, uint256 amount, bool indexed automatic);
 
-
-    constructor(address tokenReward, uint256 _minimumTokenBalanceForDividends, uint8 _decimals) DividendPayingToken(tokenReward, "Dividend_Tracker", "Dividend_Tracker", _decimals) {
+    constructor(address tokenReward, uint256 _minimumTokenBalanceForDividends) DividendPayingToken(tokenReward, "Dividend_Tracker", "Dividend_Tracker") {
         claimWait = 36000;
         minimumTokenBalanceForDividends = _minimumTokenBalanceForDividends;
     }
@@ -899,6 +909,10 @@ contract DividendTracker is DividendPayingToken, Ownable {
         claimWait = newClaimWait;
     }
 
+    function updateMinimumTokenBalanceForDividends(uint256 amount) external onlyOwner{
+        minimumTokenBalanceForDividends = amount;
+    }
+
     function getLastProcessedIndex() external view returns (uint256) {
         return lastProcessedIndex;
     }
@@ -906,7 +920,6 @@ contract DividendTracker is DividendPayingToken, Ownable {
     function getNumberOfTokenHolders() external view returns (uint256) {
         return tokenHoldersMap.keys.length;
     }
-
 
     function getAccount(address _account)
     public view returns (
