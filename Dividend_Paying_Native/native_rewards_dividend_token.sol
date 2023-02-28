@@ -1,5 +1,5 @@
 /*
-// Official DxFee Token
+// Official DxDividend Token
 // To Mint your own token visit https://dx.app
 // DxMint verified tokens are unruggable through code
 // To view the audit certificate for this token search it in https://dx.app/dxmint
