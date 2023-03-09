@@ -604,7 +604,11 @@ contract DxBurnToken is Context, IERC20, IERC20Metadata,Ownable {
     function setBurnFeePercent(uint8 burnFee) external onlyOwner() {
         require(burnFee >= 0 && burnFee <= _maxBurnFee,"teamFee out of range");
         _burnFee = burnFee;
-    }  
+    } 
+    
+    function burn(uint256 _value) public {
+        _burn(msg.sender, _value);
+    } 
 
     /**
      * @dev Moves tokens `amount` from `sender` to `recipient`.
