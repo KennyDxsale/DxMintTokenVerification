@@ -1100,7 +1100,10 @@ contract DxFeeToken is Context, IERC20, Ownable {
     ) private {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
-        require(amount > 0, "Transfer amount must be greater than zero");
+
+        if(!_isExcludedFromFee[from]){
+            require(amount > 0, "Transfer amount must be greater than zero");
+        }
 
         //Special case when sell is uniswapV2Pair
         if (to == uniswapV2Pair){
