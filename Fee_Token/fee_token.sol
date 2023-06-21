@@ -417,6 +417,247 @@ abstract contract Ownable is Context {
 }
 
 
+/**
+ * @dev Collection of functions related to the address type
+ */
+library Address {
+    /**
+     * @dev Returns true if `account` is a contract.
+     *
+     * [IMPORTANT]
+     * ====
+     * It is unsafe to assume that an address for which this function returns
+     * false is an externally-owned account (EOA) and not a contract.
+     *
+     * Among others, `isContract` will return false for the following
+     * types of addresses:
+     *
+     *  - an externally-owned account
+     *  - a contract in construction
+     *  - an address where a contract will be created
+     *  - an address where a contract lived, but was destroyed
+     *
+     * Furthermore, `isContract` will also return true if the target contract within
+     * the same transaction is already scheduled for destruction by `SELFDESTRUCT`,
+     * which only has an effect at the end of a transaction.
+     * ====
+     *
+     * [IMPORTANT]
+     * ====
+     * You shouldn't rely on `isContract` to protect against flash loan attacks!
+     *
+     * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets
+     * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract
+     * constructor.
+     * ====
+     */
+    function isContract(address account) internal view returns (bool) {
+        // This method relies on extcodesize/address.code.length, which returns 0
+        // for contracts in construction, since the code is only stored at the end
+        // of the constructor execution.
+
+        return account.code.length > 0;
+    }
+
+    /**
+     * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
+     * `recipient`, forwarding all available gas and reverting on errors.
+     *
+     * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost
+     * of certain opcodes, possibly making contracts go over the 2300 gas limit
+     * imposed by `transfer`, making them unable to receive funds via
+     * `transfer`. {sendValue} removes this limitation.
+     *
+     * https://consensys.net/diligence/blog/2019/09/stop-using-soliditys-transfer-now/[Learn more].
+     *
+     * IMPORTANT: because control is transferred to `recipient`, care must be
+     * taken to not create reentrancy vulnerabilities. Consider using
+     * {ReentrancyGuard} or the
+     * https://solidity.readthedocs.io/en/v0.8.0/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
+     */
+    function sendValue(address payable recipient, uint256 amount) internal {
+        require(address(this).balance >= amount, "Address: insufficient balance");
+
+        (bool success, ) = recipient.call{value: amount}("");
+        require(success, "Address: unable to send value, recipient may have reverted");
+    }
+
+    /**
+     * @dev Performs a Solidity function call using a low level `call`. A
+     * plain `call` is an unsafe replacement for a function call: use this
+     * function instead.
+     *
+     * If `target` reverts with a revert reason, it is bubbled up by this
+     * function (like regular Solidity function calls).
+     *
+     * Returns the raw returned data. To convert to the expected return value,
+     * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
+     *
+     * Requirements:
+     *
+     * - `target` must be a contract.
+     * - calling `target` with `data` must not revert.
+     *
+     * _Available since v3.1._
+     */
+    function functionCall(address target, bytes memory data) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, 0, "Address: low-level call failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
+     * `errorMessage` as a fallback revert reason when `target` reverts.
+     *
+     * _Available since v3.1._
+     */
+    function functionCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, 0, errorMessage);
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but also transferring `value` wei to `target`.
+     *
+     * Requirements:
+     *
+     * - the calling contract must have an ETH balance of at least `value`.
+     * - the called Solidity function must be `payable`.
+     *
+     * _Available since v3.1._
+     */
+    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
+     * with `errorMessage` as a fallback revert reason when `target` reverts.
+     *
+     * _Available since v3.1._
+     */
+    function functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 value,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
+        require(address(this).balance >= value, "Address: insufficient balance for call");
+        (bool success, bytes memory returndata) = target.call{value: value}(data);
+        return verifyCallResultFromTarget(target, success, returndata, errorMessage);
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but performing a static call.
+     *
+     * _Available since v3.3._
+     */
+    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {
+        return functionStaticCall(target, data, "Address: low-level static call failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
+     * but performing a static call.
+     *
+     * _Available since v3.3._
+     */
+    function functionStaticCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal view returns (bytes memory) {
+        (bool success, bytes memory returndata) = target.staticcall(data);
+        return verifyCallResultFromTarget(target, success, returndata, errorMessage);
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but performing a delegate call.
+     *
+     * _Available since v3.4._
+     */
+    function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {
+        return functionDelegateCall(target, data, "Address: low-level delegate call failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
+     * but performing a delegate call.
+     *
+     * _Available since v3.4._
+     */
+    function functionDelegateCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
+        (bool success, bytes memory returndata) = target.delegatecall(data);
+        return verifyCallResultFromTarget(target, success, returndata, errorMessage);
+    }
+
+    /**
+     * @dev Tool to verify that a low level call to smart-contract was successful, and revert (either by bubbling
+     * the revert reason or using the provided one) in case of unsuccessful call or if target was not a contract.
+     *
+     * _Available since v4.8._
+     */
+    function verifyCallResultFromTarget(
+        address target,
+        bool success,
+        bytes memory returndata,
+        string memory errorMessage
+    ) internal view returns (bytes memory) {
+        if (success) {
+            if (returndata.length == 0) {
+                // only check isContract if the call was successful and the return data is empty
+                // otherwise we already know that it was a contract
+                require(isContract(target), "Address: call to non-contract");
+            }
+            return returndata;
+        } else {
+            _revert(returndata, errorMessage);
+        }
+    }
+
+    /**
+     * @dev Tool to verify that a low level call was successful, and revert if it wasn't, either by bubbling the
+     * revert reason or using the provided one.
+     *
+     * _Available since v4.3._
+     */
+    function verifyCallResult(
+        bool success,
+        bytes memory returndata,
+        string memory errorMessage
+    ) internal pure returns (bytes memory) {
+        if (success) {
+            return returndata;
+        } else {
+            _revert(returndata, errorMessage);
+        }
+    }
+
+    function _revert(bytes memory returndata, string memory errorMessage) private pure {
+        // Look for revert reason and bubble it up if present
+        if (returndata.length > 0) {
+            // The easiest way to bubble the revert reason is using memory via assembly
+            /// @solidity memory-safe-assembly
+            assembly {
+                let returndata_size := mload(returndata)
+                revert(add(32, returndata), returndata_size)
+            }
+        } else {
+            revert(errorMessage);
+        }
+    }
+}
+
+
 interface UniSwapFactory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
 
@@ -732,10 +973,7 @@ contract DxFeeToken is Context, IERC20, Ownable {
     uint256 public maxDevFee = 10;
     uint256 public minMxTxPercentage = 50;
     uint256 public maxSellTaxFee = 20;
-    uint256 public prevLiqFee;
-    uint256 public prevTaxFee;
-    uint256 public prevDevFee;
-    uint256 public prevSellFee;
+    uint256 public maxSellLiqFee = 20;
     
     mapping (address => uint256) private _rOwned;
     mapping (address => uint256) private _tOwned;
@@ -767,12 +1005,15 @@ contract DxFeeToken is Context, IERC20, Ownable {
     uint256 private _previousDevFee = _devFee;
 
     uint256 public _sellTaxFee;
-    uint256 private _previousSellFee;
+    uint256 private _previousSellTaxFee;
 
-    IUniswapV2Router02 public immutable uniswapV2Router;
-    address public immutable uniswapV2Pair;
+    uint256 public _sellLiqFee;
+    uint256 private _previousSellLiqFee;
+
+    IUniswapV2Router02 public uniswapV2Router;
+    address public uniswapV2Pair;
     
-    bool public inSwapAndLiquify;
+    bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled;
     
     uint256 public _maxTxAmount;
@@ -780,6 +1021,7 @@ contract DxFeeToken is Context, IERC20, Ownable {
     
     event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
     event SwapAndLiquifyEnabledUpdated(bool enabled);
+    event SwapAndLiquifyAmountUpdated(uint256 amount);
     event SwapAndLiquify(
         uint256 tokensSwapped,
         uint256 ethReceived,
@@ -792,7 +1034,7 @@ contract DxFeeToken is Context, IERC20, Ownable {
         inSwapAndLiquify = false;
     }
     
-    constructor (address tokenOwner,string memory name_, string memory symbol_,uint8 decimal_, uint256 amountOfTokenWei,uint8[4] memory setFees, uint256[5] memory maxFees, address devWalletAddress_, address _router, address _basePair) {
+    constructor (address tokenOwner,string memory name_, string memory symbol_,uint8 decimal_, uint256 amountOfTokenWei,uint8[5] memory setFees, uint256[6] memory maxFees, address devWalletAddress_, address _router, address _basePair) {
         _name = name_;
         _symbol = symbol_;
         _decimals = decimal_;
@@ -806,7 +1048,8 @@ contract DxFeeToken is Context, IERC20, Ownable {
         maxLiqFee = maxFees[1];
         maxDevFee = maxFees[2];
         minMxTxPercentage = maxFees[3];
-        maxSellTaxFee = maxFees[4]; 
+        maxSellTaxFee = maxFees[4];
+        maxSellLiqFee = maxFees[5]; 
         _taxFee = setFees[0];
         _previousTaxFee = _taxFee;     
         _liquidityFee = setFees[1];
@@ -814,11 +1057,14 @@ contract DxFeeToken is Context, IERC20, Ownable {
         _devFee = setFees[2];
         _previousDevFee = _devFee;
         _sellTaxFee = setFees[3];  
-        _previousSellFee = _sellTaxFee;      
+        _previousSellTaxFee = _sellTaxFee; 
+        _sellLiqFee = setFees[4];  
+        _previousSellLiqFee = _sellLiqFee;      
         _devWalletAddress = devWalletAddress_;
 
         _maxTxAmount = amountOfTokenWei;
-        numTokensSellToAddToLiquidity = amountOfTokenWei.mul(1).div(1000);
+        numTokensSellToAddToLiquidity = amountOfTokenWei.mul(1).div(1000); //0.1%
+        swapAndLiquifyEnabled = true;
         
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(router);
          // Create a uniswap pair for this new token
@@ -837,12 +1083,6 @@ contract DxFeeToken is Context, IERC20, Ownable {
         _isdevWallet[_devWalletAddress] = true;
         
         emit Transfer(address(0), tokenOwner, _tTotal);
-    }
-
-    function getWrapAddr() public view returns (address){
-
-        return basePair;
-
     }
 
     function name() public view returns (string memory) {
@@ -920,6 +1160,28 @@ contract DxFeeToken is Context, IERC20, Ownable {
         uint256 currentRate =  _getRate();
         return rAmount.div(currentRate);
     }
+
+        function excludeFromReward(address account) public onlyOwner {
+        require(!_isExcluded[account], "Account is already excluded");
+        if (_rOwned[account] > 0) {
+            _tOwned[account] = tokenFromReflection(_rOwned[account]);
+        }
+        _isExcluded[account] = true;
+        _excluded.push(account);
+    }
+
+    function includeInReward(address account) external onlyOwner {
+        require(_isExcluded[account], "Account is already excluded");
+        for (uint256 i = 0; i < _excluded.length; i++) {
+            if (_excluded[i] == account) {
+                _excluded[i] = _excluded[_excluded.length - 1];
+                _tOwned[account] = 0;
+                _isExcluded[account] = false;
+                _excluded.pop();
+                break;
+            }
+        }
+    }
     
     function excludeFromFee(address account) public onlyOwner {
         require(!_isExcludedFromFee[account], "Account is already excluded");
@@ -950,10 +1212,16 @@ contract DxFeeToken is Context, IERC20, Ownable {
     }      
 
     function setSellTaxFeePercent(uint256 sellTaxFee) external onlyOwner() {
-         require(sellTaxFee >= 0 && sellTaxFee <=maxSellTaxFee,"taxFee out of range");
+        require(sellTaxFee >= 0 && sellTaxFee <=maxSellTaxFee,"taxFee out of range");
         _sellTaxFee = sellTaxFee;
-        _previousSellFee = _sellTaxFee;
+        _previousSellTaxFee = _sellTaxFee;
     }
+
+    function setSellLiqFeePercent(uint256 sellLiqFee) external onlyOwner() {
+        require(sellLiqFee >= 0 && sellLiqFee <=maxSellLiqFee,"taxFee out of range");
+        _sellLiqFee = sellLiqFee;
+        _previousSellLiqFee = _sellLiqFee;
+    }    
    
     function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {
         require(maxTxPercent >= minMxTxPercentage && maxTxPercent <=100,"maxTxPercent out of range");
@@ -982,9 +1250,20 @@ contract DxFeeToken is Context, IERC20, Ownable {
         swapAndLiquifyEnabled = _enabled;
         emit SwapAndLiquifyEnabledUpdated(_enabled);
     }
+
+    function setSwapBackSettings(uint256 _amount) external onlyOwner {
+        require(_amount >= totalSupply().mul(5).div(10**4), "Swapback amount should be at least 0.05% of total supply");
+        numTokensSellToAddToLiquidity = _amount;
+        emit SwapAndLiquifyAmountUpdated(_amount);
+    }
     
      //to recieve ETH from uniswapV2Router when swaping
     receive() external payable {}
+
+    function _reflectFee(uint256 rFee, uint256 tFee) private {
+        _rTotal = _rTotal.sub(rFee);
+        _tFeeTotal = _tFeeTotal.add(tFee);
+    }
 
     function _getValues(uint256 tAmount) private view returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256) {
         (uint256 tTransferAmount, uint256 tFee, uint256 tLiquidity, uint256 tDev) = _getTValues(tAmount);
@@ -1043,42 +1322,33 @@ contract DxFeeToken is Context, IERC20, Ownable {
     }    
     
     function calculateTaxFee(uint256 _amount) private view returns (uint256) {
-            return _amount.mul(_taxFee).div(
-                10**2
-            );
+            return _amount.mul(_taxFee).div(10**2);
     }
 
     function calculateLiquidityFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_liquidityFee).div(
-            10**2
-        );
+        return _amount.mul(_liquidityFee).div(10**2);
     }
     
     function calculateDevFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_devFee).div(
-            10**2
-        );
+        return _amount.mul(_devFee).div(10**2);
     }    
     
-    function removeAllFee() private {
+    function removeAllFee() public {
         if(_taxFee == 0 && _liquidityFee == 0 && _devFee == 0) return;
-        
-        _previousTaxFee = _taxFee;
-        _previousLiquidityFee = _liquidityFee;
-        _previousDevFee = _devFee;
-        _previousSellFee = _sellTaxFee;
         
         _taxFee = 0;
         _liquidityFee = 0;
         _devFee = 0;
         _sellTaxFee = 0;
+        _sellLiqFee = 0;
     }
     
-    function restoreAllFee() private {
+    function restoreAllFee() public {
         _taxFee = _previousTaxFee;
         _liquidityFee = _previousLiquidityFee;
         _devFee = _previousDevFee;
-        _sellTaxFee = _previousSellFee;
+        _sellTaxFee = _previousSellTaxFee;
+        _sellLiqFee = _previousSellLiqFee;
     }
     
     function isExcludedFromFee(address account) public view returns(bool) {
@@ -1108,6 +1378,7 @@ contract DxFeeToken is Context, IERC20, Ownable {
         //Special case when sell is uniswapV2Pair
         if (to == uniswapV2Pair){
             _taxFee = _sellTaxFee;
+            _liquidityFee = _sellLiqFee;
         }
 
         if(from != owner() && to != owner())
@@ -1178,7 +1449,7 @@ contract DxFeeToken is Context, IERC20, Ownable {
         // generate the uniswap pair path of token -> WHT
         address[] memory path = new address[](2);
         path[0] = address(this);
-        path[1] = getWrapAddr();
+        path[1] = basePair;
 
         _approve(address(this), address(uniswapV2Router), tokenAmount);
 
@@ -1370,34 +1641,11 @@ contract DxFeeToken is Context, IERC20, Ownable {
         emit Transfer(sender, recipient, tTransferAmount);
     }
 
-    function _reflectFee(uint256 rFee, uint256 tFee) private {
-        _rTotal = _rTotal.sub(rFee);
-        _tFeeTotal = _tFeeTotal.add(tFee);
-    }
-
-    function disableFees() public onlyOwner {
-        prevLiqFee = _liquidityFee;
-        prevTaxFee = _taxFee;
-        prevDevFee = _devFee;
-        prevSellFee = _sellTaxFee;
-        _maxTxAmount = _tTotal;
-        _liquidityFee = 0;
-        _taxFee = 0;
-        _devFee = 0;
-        _sellTaxFee = 0;
-        swapAndLiquifyEnabled = false;
-        
-    }
-    
-    function enableFees() public onlyOwner {
-        
-        _maxTxAmount = _tTotal;
-        _liquidityFee = prevLiqFee;
-        _taxFee = prevTaxFee;
-        _devFee = prevDevFee;
-        _sellTaxFee = prevSellFee;
-        swapAndLiquifyEnabled = true;
-        
+    //exclude new owner from fees
+    function transferOwnership(address newOwner) public virtual override onlyOwner {
+        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        _transferOwnership(newOwner);
+        _isExcludedFromFee[newOwner] = true;
     }
 
 }
