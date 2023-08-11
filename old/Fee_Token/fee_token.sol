@@ -1002,7 +1002,7 @@ contract DxFeeToken is Context, IERC20, Ownable {
     uint256 private _previousLiquidityFee;
     
     uint256 public _devFee;
-    uint256 private _previousDevFee;
+    uint256 private _previousDevFee = _devFee;
 
     uint256 public _sellTaxFee;
     uint256 private _previousSellTaxFee;
@@ -1019,6 +1019,7 @@ contract DxFeeToken is Context, IERC20, Ownable {
     uint256 public _maxTxAmount;
     uint256 public numTokensSellToAddToLiquidity;
     
+    event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
     event SwapAndLiquifyEnabledUpdated(bool enabled);
     event SwapAndLiquifyAmountUpdated(uint256 amount);
     event SwapAndLiquify(
@@ -1310,7 +1311,6 @@ contract DxFeeToken is Context, IERC20, Ownable {
         _rOwned[address(this)] = _rOwned[address(this)].add(rLiquidity);
         if(_isExcluded[address(this)])
             _tOwned[address(this)] = _tOwned[address(this)].add(tLiquidity);
-        emit Transfer(_msgSender(), address(this), tLiquidity);
     }
     
     function _takeDev(uint256 tDev) private {
@@ -1319,7 +1319,6 @@ contract DxFeeToken is Context, IERC20, Ownable {
         _rOwned[_devWalletAddress] = _rOwned[_devWalletAddress].add(rDev);
         if(_isExcluded[_devWalletAddress])
             _tOwned[_devWalletAddress] = _tOwned[_devWalletAddress].add(tDev);
-        emit Transfer(_msgSender(), _devWalletAddress, tDev);
     }    
     
     function calculateTaxFee(uint256 _amount) private view returns (uint256) {
