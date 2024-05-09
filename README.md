@@ -10,7 +10,7 @@ The following document will share details on how to verify code for your generat
 5. For Open Source License Type select "3) MIT License (MIT)"
 6. Click continue
 7. Now in the optimization field on the right select "Yes"
-8. In the section that says enter solidity contract code below copy paste the contract for your chain from the chains folder in this github repository
+8. In the section that says enter solidity contract code below, copy paste the contract from correct folder in this github repository
 9. At the very bottom of the page Verify the Captcha and click the Verify and Publish button
 10. BSCScan will print an error saying "ByteCode (what we are looking for):"
     - Scroll all the way to the right of this section you will see a lot of 00000000000000's followed by a few numbers
@@ -23,18 +23,23 @@ The following document will share details on how to verify code for your generat
 13. Verify the Captcha and click the Verify and Publish button.
 14. Your code should now be verified.
 
+** Important Note Core Chain: 
+For Core chain token verification, follow upto step 9 and the contract will be verified. 
+This includes for DxDividend Token as well.
+
 #### DxDividend Token Verification
 1. Make sure the IterableMapping library is verified first. Check if the contract address for IterableMapping is verified on the chain-specific blockexplorer. If not, verify using the steps mentioned above. Copy the contract code from the IterableMapping.txt file where required, select the optimization field to "Yes" like before. There will be no Bytecode error as there are no contract arguements to take care of.
 2. To verify the token, same exact steps required for other token verification except for an additional step. In the Contract Library Address section, before you verify and publish, add the Library_1 Name "IterableMapping" and its address that was deployed with the specific type of dividend token deployer (Custom vs Native).
 3. Make sure the runs value is correct under the Misc Settings/Runs (Optimizer) if optmizer was enabled for value different to 200.
 
+
 Note:
-For Standard, Burn and Fee tokens:
+For DxStandard, DxBurn and DxFee tokens:
     Compiler Version: v0.8.7
     Optimization -> yes
     Runs -> 200
 
-For Dividend tokens:
+For DxDividend tokens:
     Compiler Version: v0.8.14
     Optimization -> yes
     Runs -> 5
