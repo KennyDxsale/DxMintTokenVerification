@@ -29,7 +29,7 @@ This includes for DxDividend Token as well.
 
 #### DxDividend Token Verification
 1. Make sure the IterableMapping library is verified first. Check if the contract address for IterableMapping is verified on the chain-specific blockexplorer. If not, verify using the steps mentioned above. Copy the contract code from the IterableMapping.txt file where required, select the optimization field to "Yes" like before. There will be no Bytecode error as there are no contract arguements to take care of.
-2. To verify the token, same exact steps required for other token verification except for an additional step. In the Contract Library Address section, before you verify and publish, add the Library_1 Name "IterableMapping" and its address that was deployed with the specific type of dividend token deployer (Custom vs Native).
+2. To verify the token, same exact steps required for other token verification except for an additional step. In the Contract Library Address section, before you verify and publish, add the Library_1 Name "IterableMapping" and its address that was deployed.
 3. Make sure the runs value is correct under the Misc Settings/Runs (Optimizer) if optmizer was enabled for value different to 200.
 
 
