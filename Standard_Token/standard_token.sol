@@ -711,7 +711,13 @@ contract DxStandardToken is Context, IERC20, IERC20Metadata,Ownable {
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
+    // ...existing code...
 
+    function tokenInfo() external view returns (string memory, string memory, uint8, uint256) {
+    return (_name, _symbol, _decimals, _totalSupply);
+}
+
+// ...existing code...
     /**
      * @dev Hook that is called before any transfer of tokens. This includes
      * minting and burning.
